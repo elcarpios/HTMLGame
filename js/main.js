@@ -7,7 +7,6 @@ var myGamePiece;
 function startGame() {
 	myGameArea.start();
 	myGamePiece = new component(30, 30, 'red', 10, 120);
-	addEventArrows();
 }
 
 // Create the GameArea and Positioning in 1st child in body
@@ -20,6 +19,19 @@ var myGameArea = {
 		document.body.insertBefore(this.canvas, document.body.childNodes[0]);
 		// Set 20 milenseconds interval to refresh the canvas 50fps
 		this.interval = setInterval(updateGameArea, 20);
+		// Move by screentouch
+		window.addEventListener('touchmove', function (e) {
+			myGameArea.x = e.touches[0].screenX;
+			myGameArea.y = e.touches[0].screenY;
+		})
+		// Move by keys
+		window.addEventListener('keydown', function (e) {
+			myGameArea.keys = (myGameArea.keys || []);
+			myGameArea.keys[e.keyCode] = true;
+		})
+		window.addEventListener('keyup', function (e) {
+			myGameArea.keys[e.keyCode] = false;
+		})
 	},
 	clear: function () {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -46,6 +58,28 @@ function component(width, height, color, x, y) {
 
 function updateGameArea() {
 	myGameArea.clear();
+	// Move by touchscreen
+	if (myGameArea.touchX && myGameArea.touchY) {
+		myGamePiece.x = myGameArea.x;
+		myGamePiece.y = myGameArea.y;
+	}
+
+	// Move by keys
+	myGamePiece.speedX = 0;
+	myGamePiece.speedY = 0;
+	if (myGameArea.keys && myGameArea.keys[37]) {
+		moveLeft();
+	}
+	if (myGameArea.keys && myGameArea.keys[39]) {
+		moveRight();
+	}
+	if (myGameArea.keys && myGameArea.keys[38]) {
+		moveUp();
+	}
+	if (myGameArea.keys && myGameArea.keys[40]) {
+		moveDown();
+	}
+
 	myGamePiece.newPos();
 	myGamePiece.update();
 }
@@ -66,24 +100,7 @@ function moveRight() {
 	myGamePiece.speedX += 1;
 }
 
-function addEventArrows() {
-	$(document).keydown(function (e) {
-			switch (e.which) {
-				case 37: moveLeft(); // left
-					break;
-
-				case 38: moveUp(); // up
-					break;
-
-				case 39: moveRight(); // right
-					break;
-
-				case 40: moveDown(); // down
-					break;
-
-				default:
-					return; // exit this handler for other keys
-			}
-			e.preventDefault(); // prevent the default action (scroll / move caret)
-		})
+function stopMove() {
+	myGamePiece.speedX = 0;
+	myGamePiece.speedY = 0;
 }
